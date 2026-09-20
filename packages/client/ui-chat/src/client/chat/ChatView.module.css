@@ -11,17 +11,26 @@
 .resourceToggleSlot {
   position: sticky;
   z-index: 6;
-  top: 12px;
+  top: 72px;
   height: 0;
   display: flex;
+  align-items: flex-start;
   justify-content: flex-end;
   pointer-events: none;
 }
 
 .resourceToggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 34px;
   padding: 6px 12px;
   border: 1px solid var(--dsw-alias-border-l2);
   border-radius: 999px;
+  line-height: 20px;
+  white-space: nowrap;
   color: var(--dsw-alias-label-primary);
   background: var(--dsw-alias-bg-layer-1);
   box-shadow: var(--dsw-elevation-panel);
