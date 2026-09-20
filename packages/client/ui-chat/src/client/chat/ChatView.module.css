@@ -6,6 +6,33 @@
   flex: 1 1 auto;
 }
 
+/* Zero-height sticky slot keeps the resource entry anchored to whichever
+   element owns conversation scrolling, without extending the transcript. */
+.resourceToggleSlot {
+  position: sticky;
+  z-index: 6;
+  top: 12px;
+  height: 0;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.resourceToggle {
+  padding: 6px 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 999px;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-layer-1);
+  box-shadow: var(--dsw-elevation-panel);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.resourceToggle:hover {
+  background: var(--dsw-alias-interactive-bg-hover-solid);
+}
+
 .scroll {
   flex: 1 1 auto;
   min-height: 0;

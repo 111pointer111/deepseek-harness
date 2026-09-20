@@ -101,6 +101,19 @@ export interface DetailsToolOwnerProps {
   cwd?: string | undefined
 }
 
+/** Same-origin original resource exposed by a trusted Tool result. */
+export interface OriginalResource {
+  url: string
+  mediaType: string
+  name: string
+  sourceUrl?: string
+}
+
+/** Media owned by the selected Tool call. */
+export interface DetailsMediaOwnerProps extends MessageImagesOwnerProps {
+  originals: readonly OriginalResource[]
+}
+
 /** Command-row owner share. */
 export interface CommandRowOwnerProps {
   node: CommandNode
@@ -157,15 +170,19 @@ export type ChatViewSlotProps =
 /** Full props of the durable-message image renderer. */
 export type MessageImagesProps = PropsRuntime<'conversation.message.images'> & PropsLocale<'conversation'>
 
+/** Full props of the selected-tool original-media renderer. */
+export type DetailsMediaProps = PropsRuntime<'conversation.details.media'> & PropsLocale<'conversation'>
+
 /** Details-panel callbacks. */
 export interface DetailsInjected {
   closeDetails: () => void
+  loadImage: MessageImageLoader
 }
 
 /** Full details-panel props. */
 export type DetailsSlotProps =
   PropsRuntime<'details'>
-  & PropsRenderSlots<'conversation.details.tool'>
+  & PropsRenderSlots<'conversation.details.tool' | 'conversation.details.media'>
   & PropsStore<ChatStore>
   & InjectFace<DetailsInjected>
   & PropsLocale<'chat'>
@@ -225,5 +242,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * replaces the shipped Tool details renderer; absence uses the raw fallback.
      */
     'conversation.details.tool': { kind: 'single'; scope: 'session'; owner: DetailsToolOwnerProps }
+    /** Preview images and same-origin original resources returned by the selected Tool call. */
+    'conversation.details.media': { kind: 'single'; scope: 'session'; owner: DetailsMediaOwnerProps }
   }
 }

@@ -9,6 +9,7 @@ export interface SelectionTarget {
   stepSeq?: number
   callId?: ToolCallId
   toolName?: string
+  scope?: 'conversation-resources'
 }
 
 /** One manually expanded Turn answer generation. */

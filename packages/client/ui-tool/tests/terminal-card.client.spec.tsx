@@ -529,6 +529,7 @@ describe('DetailsPanel Output section', () => {
         useStore={bindSnapshotSelector(chat)}
         actions={chat.actions}
         closeDetails={vi.fn()}
+        loadImage={vi.fn().mockResolvedValue('blob:image')}
         t={chatT}
       />,
     )
@@ -717,6 +718,7 @@ describe('DetailsPanel Output section', () => {
         useStore={bindSnapshotSelector(chat)}
         actions={chat.actions}
         closeDetails={closeDetails}
+        loadImage={vi.fn().mockResolvedValue('blob:image')}
         t={chatT}
       />,
     )

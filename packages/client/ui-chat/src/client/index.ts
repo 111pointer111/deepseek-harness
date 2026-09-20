@@ -34,7 +34,7 @@ export type {
   AssistantActionOwnerProps, ChatFileMentions, ChatNodeOwnerProps, ChatNodeTurnDataInjected,
   ChatNodeViewProps, ChatScrollPosition, ChatStore, ChatViewInjected, ChatViewSlotProps,
   CommandRowOwnerProps, CommandRowProps, DetailsInjected, DetailsSlotProps,
-  DetailsToolOwnerProps, MessageImagesProps,
+  DetailsMediaOwnerProps, DetailsMediaProps, DetailsToolOwnerProps, MessageImagesProps, OriginalResource,
   TurnProcessOwnerProps, TurnTailOwnerProps, UseChat, UseChatNodeTurnData,
 } from './contract/slots.ts'
 export type {

@@ -161,6 +161,7 @@ describe('render branch tails', () => {
         useStore={bindSnapshotSelector(chat)}
         actions={chat.actions}
         closeDetails={vi.fn()}
+        loadImage={vi.fn().mockResolvedValue('blob:image')}
         t={t}
       />,
     )
@@ -223,6 +224,7 @@ describe('render branch tails', () => {
         useStore={bindSnapshotSelector(chat)}
         actions={chat.actions}
         closeDetails={vi.fn()}
+        loadImage={vi.fn().mockResolvedValue('blob:image')}
         t={t}
       />,
     )

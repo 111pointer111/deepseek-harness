@@ -5,6 +5,7 @@ import { apply as applyHost } from '../src/index.ts'
 import { apply, inject } from '../src/client/index.ts'
 import { ComposerAttachments } from '../src/client/ComposerAttachments.tsx'
 import { MessageImages } from '../src/client/MessageImages.tsx'
+import { DetailsMedia } from '../src/client/DetailsMedia.tsx'
 
 async function bench() {
   const ctx = new Context()
@@ -15,6 +16,7 @@ async function bench() {
       'conversation.input.attachments': { kind: 'single', scope: 'session-maybe' },
       'conversation.message.images': { kind: 'single', scope: 'session' },
       'conversation.trajectory.images': { kind: 'single', scope: 'session' },
+      'conversation.details.media': { kind: 'single', scope: 'session' },
     },
   } as never, () => null)
   const fiber = ctx.plugin({ inject: [...inject], apply })
@@ -42,11 +44,16 @@ describe('attachment plugin', () => {
       locale: 'conversation',
       component: MessageImages,
     }])
+    expect(ctx.slots.entries('conversation.details.media')).toMatchObject([{
+      locale: 'conversation',
+      component: DetailsMedia,
+    }])
 
     await fiber.dispose()
 
     expect(ctx.slots.entries('conversation.input.attachments')).toHaveLength(0)
     expect(ctx.slots.entries('conversation.message.images')).toHaveLength(0)
     expect(ctx.slots.entries('conversation.trajectory.images')).toHaveLength(0)
+    expect(ctx.slots.entries('conversation.details.media')).toHaveLength(0)
   })
 })

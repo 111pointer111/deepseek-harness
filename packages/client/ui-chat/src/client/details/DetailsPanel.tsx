@@ -1,9 +1,8 @@
 import { Fragment } from 'react'
 import { CodeBlock } from '@deepseek-ai/dsh-client-ui-primitives'
-import { shallowEqual } from '@deepseek-ai/dsh-client-store'
 import type { DetailsSlotProps } from '../contract/slots.ts'
 import type { ChatSnapshot, RunningToolCall, ToolCallBlock, ToolResultNode } from '../contract/snapshot.ts'
-import { findToolCall } from './tool-node-reader.ts'
+import { findToolCall, mediaCalls, originalResources } from './tool-node-reader.ts'
 import css from './DetailsPanel.module.css'
 
 export type DetailsPanelProps = DetailsSlotProps
@@ -45,22 +44,48 @@ function rawResultText(block: ToolCallBlock): string {
   return parts.join('\n')
 }
 
-export function DetailsPanel({ useChat, useSessions, sessionId, useStore, renderSlot, closeDetails, t }: DetailsPanelProps) {
+function resultImages(block: ToolCallBlock) {
+  if (!('kind' in block)) return []
+  return block.content.flatMap(item => item.type === 'image' ? [{ attachment: item.attachment }] : [])
+}
+
+export function conversationMedia(snapshot: ChatSnapshot) {
+  const originals = new Map<string, ReturnType<typeof originalResources>[number]>()
+  const images = new Map<string, ReturnType<typeof resultImages>[number]>()
+  for (const block of mediaCalls(snapshot)) {
+    const blockOriginals = originalResources(block)
+    if (blockOriginals.length > 0) {
+      for (const item of blockOriginals) originals.set(item.url, item)
+      continue
+    }
+    for (const item of resultImages(block)) images.set(item.attachment.attachmentId, item)
+  }
+  return { originals: [...originals.values()], images: [...images.values()] }
+}
+
+export function DetailsPanel({ useChat, useSessions, sessionId, useStore, renderSlot, closeDetails, loadImage, t }: DetailsPanelProps) {
   const selection = useStore(s => s.selection)
   // Session workspace root: a card model resolves omitted or relative
   // tool paths against it without reading Session services.
   const sessionCwd = useSessions(list => list.byId[sessionId]?.cwd)
   const callId = selection?.callId
-  // materialFor builds a fresh wrapper; shallowEqual short-circuits on its
-  // stable members (result node reference rides the snapshot's structural sharing).
-  const material = useChat(
-    s => (callId === undefined ? null : materialFor(s, callId)),
-    (a, b) => shallowEqual(a, b))
+  const snapshot = useChat(s => s)
+  const material = callId === undefined ? null : materialFor(snapshot, callId)
+  const allResources = selection?.scope === 'conversation-resources'
+  const media = allResources
+    ? conversationMedia(snapshot)
+    : material === null
+      ? { originals: [], images: [] }
+      : (() => {
+          const originals = originalResources(material.block)
+          return { originals, images: originals.length > 0 ? [] : resultImages(material.block) }
+        })()
+  const resourceCount = media.originals.length + media.images.length
   return (
     <div className={css.root}>
       <div className={css.header}>
         <div className={css.title}>
-          {selection === null ? t('details.title') : material?.name ?? selection.toolName ?? t('details.title')}
+          {resourceCount > 0 ? t('details.resources') : selection === null ? t('details.title') : material?.name ?? selection.toolName ?? t('details.title')}
         </div>
         <button
           type="button" className={css.close} aria-label={t('details.close')}
@@ -78,13 +103,19 @@ export function DetailsPanel({ useChat, useSessions, sessionId, useStore, render
             ? <div className={css.empty}>{t('details.notInWindow')}</div>
             : (
               <>
-                {material.argsRaw !== null && (
+                {resourceCount > 0 && (
+                  <section className={css.section}>
+                    <div className={css.sectionLabel}>{t('details.resourcesFound', { count: resourceCount })}</div>
+                    {renderSlot('conversation.details.media', { ...media, loadImage, align: 'start' })}
+                  </section>
+                )}
+                {!allResources && material.argsRaw !== null && (
                   <section className={css.section}>
                     <div className={css.sectionLabel}>{t('details.input')}</div>
                     <CodeBlock code={pretty(material.argsRaw)} lang="json" copyLabel={t('copy')} copiedLabel={t('copied')} />
                   </section>
                 )}
-                <section className={css.section}>
+                {!allResources && <section className={css.section}>
                   <div className={css.sectionLabel}>{t('details.output')}</div>
                   {/* Keyed by the selected call: the body owns per-call view
                       state (the terminal card's expand and copy), which React
@@ -101,7 +132,7 @@ export function DetailsPanel({ useChat, useSessions, sessionId, useStore, render
                         : <div className={css.empty}>{t('details.running')}</div>,
                     })}
                   </Fragment>
-                </section>
+                </section>}
               </>
             )}
       </div>

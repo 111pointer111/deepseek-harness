@@ -18,6 +18,7 @@ import type {
 } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { WorkspaceSnapshot } from '@deepseek-ai/dsh-api-workspace-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { AttachmentId } from '@deepseek-ai/dsh-attachment'
 import type { SessionPendingInteractionSnapshot } from '@deepseek-ai/dsh-client-ui-session/client'
 import type { KeyedSnapshotSelectorHook, SnapshotSelectorHook } from '@deepseek-ai/dsh-client-ui-slots'
 import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
@@ -541,6 +542,38 @@ describe('Chat node rendering', () => {
 })
 
 describe('ChatView', () => {
+  it('opens the latest media call only when the user requests resources', () => {
+    const media = {
+      ...toolResult(3, 'airi-get', 'airi_get'),
+      content: [{
+        type: 'image' as const,
+        attachment: {
+          attachmentId: AttachmentId(`sha256:${'a'.repeat(64)}`),
+          mediaType: 'image/webp' as const,
+          bytes: 68,
+          width: 500,
+          height: 667,
+          name: 'offer.webp',
+        },
+      }],
+    }
+    const h = makeHarness({ nodes: [media] })
+    const view = render(<h.ChatView {...h.props} />)
+    expect(h.openDetails).not.toHaveBeenCalled()
+
+    const button = view.getByRole('button', { name: '资源' })
+    expect(button.parentElement?.className).toContain('resourceToggleSlot')
+    expect(button.parentElement?.parentElement?.className).toContain('scroll')
+    fireEvent.click(button)
+
+    expect(h.openDetails).toHaveBeenCalledWith({
+      turnSeq: 3,
+      callId: 'airi-get',
+      toolName: 'airi_get',
+      scope: 'conversation-resources',
+    })
+  })
+
   it('leaves the turn rail unrendered when an unrelated Chat update commits', () => {
     const snapshot = chatSnapshotFixture({
       nodes: [

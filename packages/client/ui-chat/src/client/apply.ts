@@ -163,8 +163,17 @@ export function apply(ctx: Context): void {
   ctx.slots.inject('details', () => ctx.slots.register({
     name: 'details',
     locale: NS,
-    children: { 'conversation.details.tool': { kind: 'single', scope: 'session' } },
+    children: {
+      'conversation.details.tool': { kind: 'single', scope: 'session' },
+      'conversation.details.media': { kind: 'single', scope: 'session' },
+    },
     store: chatStore,
-    inject: (): DetailsInjected => ({ closeDetails: () => { ctx.layout.closeDetails() } }),
+    inject: (sessionId: SessionId): DetailsInjected => ({
+      closeDetails: () => { ctx.layout.closeDetails() },
+      loadImage: Object.assign(
+        (attachment: ImageAttachmentRef) => ctx.uiConversation.imageUrl(sessionId, attachment),
+        { peek: (attachment: ImageAttachmentRef) => ctx.uiConversation.peekImageUrl(sessionId, attachment) },
+      ),
+    }),
   }, DetailsPanel))
 }

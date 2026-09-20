@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package renders everything the conversation UI shows about attachments: pending draft images under the composer, a full-viewport drop invitation, durable images in Chat and Trajectory, and a lightbox for the original image. It is a pure presentation layer — attachment data, image loading, and callbacks come from the conversation package through declared slots. Choose it for the DeepSeek Chat-style image experience; non-image files have no surface here.
+This package renders everything the conversation UI shows about attachments: pending draft images under the composer, a full-viewport drop invitation, durable images in Chat, Trajectory, and Tool details, and a downloadable lightbox for the original image. It is a pure presentation layer — attachment data, image loading, and callbacks come from the conversation package through declared slots. Choose it for the DeepSeek Chat-style image experience; non-image files have no surface here.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ This package renders everything the conversation UI shows about attachments: pen
 <a id="use-this-package"></a>
 ## Use this package
 
-Mount this plugin alongside [`ui-conversation`](../ui-conversation/README.md); it waits for the conversation package's slot declarations and registers its surfaces into them. Users then see the draft-image rail with per-image remove and click-to-open, the drop overlay with its limits line, message images sized by count, and the Escape/mask/close lightbox.
+Mount this plugin alongside [`ui-conversation`](../ui-conversation/README.md); it waits for attachment slot declarations and registers its surfaces into them. Users then see the draft-image rail with per-image remove and click-to-open, the drop overlay with its limits line, message and Tool-result images sized by count, and the Escape/mask/close lightbox with a native download action.
 
 ### Draft images
 
@@ -47,7 +47,7 @@ While a file drag is over the page, the full-viewport overlay announces the drop
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-The plugin waits for `conversation.input.attachments`, `conversation.message.images`, and `conversation.trajectory.images` through `ctx.slots.inject`. It then registers the composer rail, document drop target, shared history gallery for Chat and Trajectory, and original-image lightbox. The presentation components are pure props: the conversation slot owner supplies attachment data, image loading, callbacks, and the locale translator; the package entry exports no components.
+The plugin waits for `conversation.input.attachments`, `conversation.message.images`, `conversation.trajectory.images`, and `conversation.details.media` through `ctx.slots.inject`. It then registers the composer rail, document drop target, shared gallery for Chat, Trajectory, and Tool details, and original-image lightbox. The presentation components are pure props: each slot owner supplies attachment data, image loading, callbacks, and the locale translator; the package entry exports no components.
 
 | File | Role |
 |---|---|
@@ -90,7 +90,7 @@ None; this package neither assembles nor sends a provider request.
 These limits define the current attachment surface. They are package constraints, not a general image-viewer comparison or a task backlog.
 
 - **Images only** — non-image files have no rail card or history renderer yet; DeepSeek Chat-style file cards and upload progress wait until the composer accepts non-image attachments.
-- **No zoom or download in the lightbox** — the preview renders the original at fit-to-viewport size only.
+- **No zoom in the lightbox** — the preview renders the downloadable original at fit-to-viewport size only.
 - **The lightbox does not trap focus** — it sets `aria-modal` and restores focus on close, but Tab can reach the page behind it.
 
 <a id="dev-note"></a>

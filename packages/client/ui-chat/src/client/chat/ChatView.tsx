@@ -8,12 +8,13 @@ import type {
 import type { SessionSeq } from '@deepseek-ai/dsh-session/types'
 import { Button, IconChevronDownOutline14, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
-import type { ChatSnapshot } from '../contract/snapshot.ts'
+import type { ChatSnapshot, ToolResultNode } from '../contract/snapshot.ts'
 import { PendingSteeringBubble, PendingSubmissionBubble } from './MessageItem.tsx'
 import { ChatNodeSeat } from './ChatNodeSeat.tsx'
 import { TurnNavigator } from './TurnNavigator.tsx'
 import { mergeTurnRailItems, type TurnRailItem } from './turn-rail-items.ts'
 import { formatRunDuration } from './message-chrome.ts'
+import { mediaCalls } from '../details/tool-node-reader.ts'
 import css from './ChatView.module.css'
 
 const FOLLOW_THRESHOLD = 24
@@ -156,6 +157,10 @@ function observedRpcIds(
   return observed
 }
 
+export function latestMediaCall(snapshot: ChatSnapshot): ToolResultNode | null {
+  return mediaCalls(snapshot).at(-1) ?? null
+}
+
 function runningTurnStartTime(timeline: ConversationTimelineSnapshot): number | null {
   let latest: number | null = null
   for (const turn of timeline.turns.values()) {
@@ -216,7 +221,7 @@ const ChatNodeList = memo(function ChatNodeList({ order, ...seatProps }: ChatNod
  */
 export function ChatView({
   useSession, useChat, useChatNode, useChatNodeProcess, useSessions, useStore, actions, renderSlot,
-  sessionId, openFile, loadOlder, loadThrough, loadImage, openView, chatScroll, forkAt, fileMentions,
+  sessionId, openFile, openDetails, loadOlder, loadThrough, loadImage, openView, chatScroll, forkAt, fileMentions,
   useTranscriptView, useProjection, t,
 }: ChatViewSlotProps) {
   const order = useChat(s => s.order)
@@ -242,6 +247,16 @@ export function ChatView({
   const hasMore = useSession(s => s.hasMore)
   const loadingOlder = useSession(s => s.loadingOlder)
   const selectedCallId = useStore(s => s.selection?.callId)
+  const latestMedia = useChat(latestMediaCall)
+  const openLatestMedia = useCallback(() => {
+    if (latestMedia === null) return
+    openDetails({
+      turnSeq: latestMedia.seq,
+      callId: latestMedia.callId,
+      toolName: latestMedia.call?.name ?? latestMedia.callId,
+      scope: 'conversation-resources',
+    })
+  }, [latestMedia, openDetails])
   const compactTranscript = useTranscriptView(mode => mode === 'compact')
   const inspectCall = useCallback((callId: string) => {
     openView('trajectory', callId)
@@ -753,6 +768,13 @@ export function ChatView({
   return (
     <div className={css.root}>
       <div ref={listRef} className={css.scroll}>
+        {latestMedia !== null && (
+          <div className={css.resourceToggleSlot}>
+            <button type="button" className={css.resourceToggle} onClick={openLatestMedia}>
+              {t('chat.resources')}
+            </button>
+          </div>
+        )}
         <TurnNavigator
           items={railItems}
           activeTurn={activeTurn}
