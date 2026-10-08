@@ -1,0 +1,12 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+const source = new URL('./src/', import.meta.url)
+const output = new URL('./lib/', import.meta.url)
+await mkdir(output, { recursive: true })
+const projection = (await readFile(new URL('resources.mjs', source), 'utf8')).replace('export function resourcesFrom', 'function resourcesFrom')
+const client = (await readFile(new URL('client.mjs', source), 'utf8'))
+  .replace("import { createElement as h, useCallback, useEffect, useMemo, useRef, useState } from 'react'", "const { createElement: h, useCallback, useEffect, useMemo, useRef, useState } = require('react')")
+  .replace("import { resourcesFrom } from './resources.mjs'", projection)
+  .replace('export const inject', 'const inject')
+  .replace('export function apply', 'function apply')
+await writeFile(new URL('index.js', output), '/** Browser-only extension; the Host row enables client module discovery. */\nexport function apply() {}\n')
+await writeFile(new URL('client.js', output), `window.__ModuleLoader__.load({ id: 'dsh-airi-resources', factory: (require) => {\n${client}\nreturn { inject, apply }\n} });\n`)
